@@ -1,0 +1,43 @@
+import * as React from "react";
+import type { Nexo, TipoCliente } from "@/types";
+
+const NEXO_HEX: Record<Nexo, string> = {
+  rojo: "#D24444",
+  amarillo: "#D9A62E",
+  verde: "#3F9B62",
+};
+
+interface PinMarkerProps {
+  tipoCliente: TipoCliente;
+  nexo: Nexo;
+  size?: number;
+}
+
+export function PinMarker({ tipoCliente, nexo, size = 34 }: PinMarkerProps) {
+  const fill = tipoCliente === "prospecto" ? "#D98A2B" : "#1E6FA8";
+  return (
+    <svg width={size} height={size * 1.25} viewBox="0 0 34 42" fill="none">
+      <path
+        d="M17 41C17 41 31 25.6 31 15.5C31 7.49 24.73 1 17 1C9.27 1 3 7.49 3 15.5C3 25.6 17 41 17 41Z"
+        fill={fill}
+        stroke="white"
+        strokeWidth="1.5"
+      />
+      <circle cx="17" cy="15" r="6.5" fill="white" />
+      <circle cx="17" cy="15" r="4.2" fill={fill} />
+      <circle cx="26" cy="8" r="5" fill={NEXO_HEX[nexo]} stroke="white" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+export function pinMarkerHTML(tipoCliente: TipoCliente, nexo: Nexo): string {
+  const fill = tipoCliente === "prospecto" ? "#D98A2B" : "#1E6FA8";
+  return `
+    <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17 41C17 41 31 25.6 31 15.5C31 7.49 24.73 1 17 1C9.27 1 3 7.49 3 15.5C3 25.6 17 41 17 41Z" fill="${fill}" stroke="white" stroke-width="1.5"/>
+      <circle cx="17" cy="15" r="6.5" fill="white"/>
+      <circle cx="17" cy="15" r="4.2" fill="${fill}"/>
+      <circle cx="26" cy="8" r="5" fill="${NEXO_HEX[nexo]}" stroke="white" stroke-width="1.5"/>
+    </svg>
+  `;
+}
