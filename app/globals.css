@@ -112,3 +112,33 @@ body {
 .leaflet-popup-tip {
   display: none;
 }
+
+/* Live "you are here" marker */
+.user-location-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1e6fa8;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px rgba(30, 111, 168, 0.35), 0 2px 6px rgba(10, 42, 67, 0.4);
+  position: relative;
+}
+.user-location-dot::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: rgba(30, 111, 168, 0.28);
+  animation: user-location-pulse 2s ease-out infinite;
+}
+@keyframes user-location-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
