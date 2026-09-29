@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -16,10 +17,34 @@ const TABS = [
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const navRef = React.useRef<HTMLElement>(null);
+
+  // Measure the bar's real rendered height (content + safe-area inset) and
+  // publish it as --tabbar-height so other screens (e.g. the map) can size
+  // themselves exactly instead of guessing — this is what caused the FAB
+  // buttons to end up hidden behind the tab bar on iOS standalone PWAs.
+  React.useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const publish = () => {
+      document.documentElement.style.setProperty("--tabbar-height", `${el.offsetHeight}px`);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    window.addEventListener("orientationchange", publish);
+    window.addEventListener("resize", publish);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", publish);
+      window.removeEventListener("resize", publish);
+    };
+  }, []);
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      ref={navRef}
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1.5"
       aria-label="Navegación principal"
     >
       <div className="glass glass-shadow flex w-full max-w-md items-center justify-between rounded-capsule px-2 py-2">

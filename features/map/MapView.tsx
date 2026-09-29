@@ -17,8 +17,7 @@ import { useStore } from "@/store/useStore";
 import type { Cliente } from "@/types";
 import { PinMarker, pinMarkerHTML } from "@/components/shared/PinMarker";
 import { GlassButton } from "@/components/shared/GlassButton";
-import { cn } from "@/lib/utils";
-import { ClientMapSheet } from "./ClientMapSheet";
+import { ClientDetailSheet } from "@/features/clients/ClientDetailSheet";
 import { MapFilters, type MapFilterState } from "./MapFilters";
 import { ClientFormModal } from "@/features/clients/ClientFormModal";
 import { toast } from "sonner";
@@ -180,7 +179,7 @@ export function MapView() {
     // `isolate` gives this wrapper its own stacking context so Leaflet's internal
     // panes (which use high z-index values) can never render above content
     // outside the map, such as the client bottom sheet or any modal.
-    <div className="relative isolate h-[calc(100dvh-8.5rem)] w-full overflow-hidden rounded-card border border-border">
+    <div className="relative isolate h-full w-full overflow-hidden rounded-card border border-border">
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={13}
@@ -255,7 +254,6 @@ export function MapView() {
             variant={tracking ? "primary" : "icon"}
             aria-label={tracking ? "Desactivar ubicación en tiempo real" : "Activar ubicación en tiempo real"}
             onClick={toggleTracking}
-            className={cn(tracking && "animate-pulse")}
           >
             <LocateFixed className="h-5 w-5" />
           </GlassButton>
@@ -270,7 +268,7 @@ export function MapView() {
         </div>
       )}
 
-      <ClientMapSheet
+      <ClientDetailSheet
         cliente={selected}
         open={!!selected}
         onOpenChange={(open) => !open && setSelectedId(null)}

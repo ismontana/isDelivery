@@ -15,6 +15,13 @@
   --glass-bg: 255 255 255 / 0.55;
   --glass-border: 255 255 255 / 0.4;
   --glass-shadow: 10 42 67;
+
+  /* Real height of the fixed bottom tab bar (icons + labels + padding +
+     the device's home-indicator safe area). Set precisely at runtime by
+     BottomTabBar via ResizeObserver; this is only the pre-measurement
+     fallback so nothing jumps before JS runs. */
+  --tabbar-height: 5rem;
+  --header-top-pad: max(0.5rem, env(safe-area-inset-top, 0px));
 }
 
 .dark {
@@ -141,4 +148,11 @@ body {
     transform: scale(1.7);
     opacity: 0;
   }
+}
+
+/* Sonner toasts must clear the iOS notch / status bar when the app runs
+   standalone (added to home screen), where there is no browser chrome to
+   push content down. */
+[data-sonner-toaster] {
+  top: max(1rem, env(safe-area-inset-top, 0px)) !important;
 }

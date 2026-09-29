@@ -6,15 +6,18 @@ import { PageHeader } from "@/components/shared/PageHeader";
 const MapView = dynamic(() => import("@/features/map/MapView").then((m) => m.MapView), {
   ssr: false,
   loading: () => (
-    <div className="h-[calc(100dvh-8.5rem)] w-full animate-pulse rounded-card bg-black/5 dark:bg-white/5" />
+    <div className="h-full w-full animate-pulse rounded-card bg-black/5 dark:bg-white/5" />
   ),
 });
 
 export default function MapPage() {
   return (
-    <div>
-      <PageHeader title="Mapa" subtitle="Clientes y prospectos en ruta" />
-      <div className="px-3">
+    <div
+      className="flex flex-col"
+      style={{ height: "calc(100dvh - var(--header-top-pad) - var(--tabbar-height))" }}
+    >
+      <PageHeader title="Mapa" subtitle="Clientes y prospectos en ruta" className="shrink-0" />
+      <div className="min-h-0 flex-1 px-3 pb-3">
         <MapView />
       </div>
     </div>

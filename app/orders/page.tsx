@@ -20,7 +20,10 @@ export default function OrdersPage() {
         <OrdersList />
       </div>
 
-      <div className="fixed bottom-24 right-5 z-30">
+      <div
+        className="fixed right-5 z-30"
+        style={{ bottom: "calc(var(--tabbar-height) + 1rem)" }}
+      >
         <GlassButton
           size="icon"
           variant="primary"

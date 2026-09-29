@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased">
         <Providers>
           <AppGate>
-            <div className="mx-auto flex min-h-screen w-full max-w-md flex-col pb-28 pt-[max(0.5rem,env(safe-area-inset-top))] sm:max-w-lg md:max-w-2xl">
+            <div className="mx-auto flex min-h-screen w-full max-w-md flex-col pb-[var(--tabbar-height)] pt-[var(--header-top-pad)] sm:max-w-lg md:max-w-2xl">
               {children}
             </div>
             <BottomTabBar />
