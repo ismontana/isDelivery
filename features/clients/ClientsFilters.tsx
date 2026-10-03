@@ -4,7 +4,8 @@ import { Search } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import type { DiaSemana, Nexo } from "@/types";
+import type { ActividadTono } from "@/lib/actividad";
+import type { DiaSemana } from "@/types";
 import { DIA_LABEL, DIAS_SEMANA } from "@/types";
 
 export interface ClientFilterState {
@@ -13,7 +14,7 @@ export interface ClientFilterState {
   tipo: "todos" | "cliente" | "prospecto";
   tipoVenta: "todos" | "mayor" | "menor";
   dia: "todos" | DiaSemana;
-  nexo: "todos" | Nexo;
+  actividad: "todos" | ActividadTono;
 }
 
 export const DEFAULT_CLIENT_FILTERS: ClientFilterState = {
@@ -22,7 +23,7 @@ export const DEFAULT_CLIENT_FILTERS: ClientFilterState = {
   tipo: "todos",
   tipoVenta: "todos",
   dia: "todos",
-  nexo: "todos",
+  actividad: "todos",
 };
 
 export function ClientsFilters({
@@ -91,14 +92,17 @@ export function ClientsFilters({
           ))}
         </Select>
         <Select
-          value={value.nexo}
-          onChange={(e) => onChange({ ...value, nexo: e.target.value as ClientFilterState["nexo"] })}
-          className="w-auto min-w-[6.5rem]"
+          value={value.actividad}
+          onChange={(e) =>
+            onChange({ ...value, actividad: e.target.value as ClientFilterState["actividad"] })
+          }
+          className="w-auto min-w-[9rem]"
         >
-          <option value="todos">Nexo</option>
-          <option value="rojo">●</option>
-          <option value="amarillo">●</option>
-          <option value="verde">●</option>
+          <option value="todos">Actividad</option>
+          <option value="verde">Reciente (≤7d)</option>
+          <option value="amarillo">Moderada (8–21d)</option>
+          <option value="rojo">Inactivo (21d+)</option>
+          <option value="gris">Sin actividad</option>
         </Select>
       </div>
     </div>

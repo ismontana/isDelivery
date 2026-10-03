@@ -11,10 +11,13 @@ import { ClientsFilters, DEFAULT_CLIENT_FILTERS, type ClientFilterState } from "
 import { ClientsTable } from "@/features/clients/ClientsTable";
 import { ClientDetailSheet } from "@/features/clients/ClientDetailSheet";
 import { ClientFormModal } from "@/features/clients/ClientFormModal";
+import { diasDesdeUltimaActividad, actividadTono } from "@/lib/actividad";
 import type { Cliente } from "@/types";
 
 export default function ClientsPage() {
   const clientes = useStore((s) => s.clientes);
+  const ventas = useStore((s) => s.ventas);
+  const pedidos = useStore((s) => s.pedidos);
   const [filters, setFilters] = React.useState<ClientFilterState>(DEFAULT_CLIENT_FILTERS);
   const [selected, setSelected] = React.useState<Cliente | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
@@ -27,10 +30,13 @@ export default function ClientsPage() {
       if (filters.tipo !== "todos" && c.tipoCliente !== filters.tipo) return false;
       if (filters.tipoVenta !== "todos" && c.tipoVenta !== filters.tipoVenta) return false;
       if (filters.dia !== "todos" && !c.diasEntrega.includes(filters.dia)) return false;
-      if (filters.nexo !== "todos" && c.nexo !== filters.nexo) return false;
+      if (filters.actividad !== "todos") {
+        const dias = diasDesdeUltimaActividad(c.id, ventas, pedidos);
+        if (actividadTono(dias) !== filters.actividad) return false;
+      }
       return true;
     });
-  }, [clientes, filters]);
+  }, [clientes, ventas, pedidos, filters]);
 
   return (
     <PageTransition>

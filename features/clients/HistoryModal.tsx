@@ -123,7 +123,13 @@ export function HistoryModal({
                     {p.montoLiquidoPendiente > 0 && (
                       <span className="font-medium text-danger">
                         {" "}
-                        · {formatMoney(p.montoLiquidoPendiente)}
+                        · {formatMoney(p.montoLiquidoPendiente)} de agua
+                      </span>
+                    )}
+                    {p.montoDepositoPendiente > 0 && (
+                      <span className="font-medium text-danger">
+                        {" "}
+                        · {formatMoney(p.montoDepositoPendiente)} de depósito
                       </span>
                     )}
                   </p>

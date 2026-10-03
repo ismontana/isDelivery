@@ -3,24 +3,21 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import { SplashScreen } from "@/components/shared/SplashScreen";
+import { SplashScreen } from "./SplashScreen";
 
-export default function Home() {
+export function GuestGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const hydrated = useAuthStore((s) => s.hydrated);
   const currentUser = useAuthStore((s) => s.getCurrentUser());
 
   React.useEffect(() => {
-    if (!hydrated) return;
-    if (!currentUser) {
-      router.replace("/login");
-    } else if (currentUser.rol === "super_admin") {
-      router.replace("/admin-plataforma");
-    } else {
-      router.replace("/map");
-    }
+    if (!hydrated || !currentUser) return;
+    router.replace(currentUser.rol === "super_admin" ? "/admin-plataforma" : "/map");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, currentUser?.id]);
 
-  return <SplashScreen />;
+  if (!hydrated) return <SplashScreen />;
+  if (currentUser) return <SplashScreen />;
+
+  return <>{children}</>;
 }

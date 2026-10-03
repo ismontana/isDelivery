@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { BottomTabBar } from "@/components/shared/BottomTabBar";
-import { AppGate } from "@/components/shared/AppGate";
 
 export const metadata: Metadata = {
   title: "isDelivery",
@@ -37,14 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
-        <Providers>
-          <AppGate>
-            <div className="mx-auto flex min-h-screen w-full max-w-md flex-col pb-[var(--tabbar-height)] pt-[var(--header-top-pad)] sm:max-w-lg md:max-w-2xl">
-              {children}
-            </div>
-            <BottomTabBar />
-          </AppGate>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,5 +1,3 @@
-export type Nexo = "rojo" | "amarillo" | "verde";
-
 export type TipoGarrafon =
   | "Nuevo"
   | "Ciel"
@@ -37,7 +35,6 @@ export interface Cliente {
   tipoCliente: TipoCliente;
   tipoVenta: TipoVenta;
   diasEntrega: DiaSemana[];
-  nexo: Nexo;
   precio20: number;
   precio10: number;
   createdAt: string;
@@ -81,7 +78,7 @@ export interface Prestamo {
   id: string;
   clienteId: string;
   fecha: string;
-  envase20: number; // envases prestados (no se cobran)
+  envase20: number; // envases prestados
   envase10: number;
   liquido20: number; // garrafones llenos prestados
   liquido10: number;
@@ -89,8 +86,16 @@ export interface Prestamo {
   precioLiquido20: number;
   precioLiquido10: number;
   montoLiquidoPendiente: number; // 0 si aguaPagada o ya liquidado
-  envase20Pendiente: number; // por recoger
+  envase20Pendiente: number; // piezas por recoger (envase + líquido de ese tamaño)
   envase10Pendiente: number;
+  /** Snapshot de la configuración del negocio al momento del préstamo: si
+   * los envases prestados llevan un depósito/importe (configurable en
+   * Ajustes → Préstamos), aquí se guarda cuánto se cobró y cuánto sigue
+   * pendiente de pago (independiente de si la pieza ya fue devuelta). */
+  envaseConCosto: boolean;
+  precioDepositoEnvase20: number;
+  precioDepositoEnvase10: number;
+  montoDepositoPendiente: number;
 }
 
 export interface Purificadora {
@@ -125,6 +130,26 @@ export interface EnvaseDefault {
   precio10: number;
 }
 
+export type FrecuenciaComision = "diaria" | "semanal" | "mensual";
+
+/** Configuración de negocio para préstamos de envase y cobranza por
+ * atraso. Vive junto a los demás ajustes globales del negocio (como
+ * EnvaseDefault) y la administra el admin del negocio — o el propio
+ * repartidor cuando es un vendedor independiente (esa cuenta también
+ * tiene rol 'admin', ver types/auth.ts). */
+export interface Configuracion {
+  prestamoHabilitado: boolean;
+  envasePrestadoConCosto: boolean;
+  precioPrestamoEnvase20: number;
+  precioPrestamoEnvase10: number;
+  comisionRetrasoHabilitada: boolean;
+  comisionRetrasoMonto: number;
+  comisionRetrasoFrecuencia: FrecuenciaComision;
+  /** Días de gracia tras la fecha de venta antes de que empiece a
+   * acumularse la comisión por atraso. */
+  comisionRetrasoDiasGracia: number;
+}
+
 export type StockMovimientoTipo =
   | "compra"
   | "roto"
@@ -156,7 +181,7 @@ export interface Stock {
   enPoderClientes10: number;
 }
 
-export type DeudaTipo = "venta_fiada" | "envase" | "liquido";
+export type DeudaTipo = "venta_fiada" | "envase" | "liquido" | "deposito_envase";
 
 export interface DeudaRow {
   id: string;

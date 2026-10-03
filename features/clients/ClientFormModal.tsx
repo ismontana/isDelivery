@@ -10,9 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { DaySelector } from "@/components/shared/DaySelector";
-import { NexoSelector } from "@/components/shared/NexoSelector";
 import { useStore } from "@/store/useStore";
-import type { Cliente, DiaSemana, Nexo, TipoCliente, TipoGarrafon, TipoVenta } from "@/types";
+import type { Cliente, DiaSemana, TipoCliente, TipoGarrafon, TipoVenta } from "@/types";
 
 const TIPOS_GARRAFON: TipoGarrafon[] = [
   "Nuevo",
@@ -44,7 +43,6 @@ interface FormState {
   lat: number;
   lng: number;
   diasEntrega: DiaSemana[];
-  nexo: Nexo;
   precio20: number;
   precio10: number;
 }
@@ -64,7 +62,6 @@ function emptyForm(municipioDefault: string, coords?: [number, number]): FormSta
     lat: coords?.[0] ?? 19.3167,
     lng: coords?.[1] ?? -97.9167,
     diasEntrega: [],
-    nexo: "verde",
     precio20: 0,
     precio10: 0,
   };
@@ -98,7 +95,6 @@ export function ClientFormModal({
           lat: cliente.lat,
           lng: cliente.lng,
           diasEntrega: cliente.diasEntrega,
-          nexo: cliente.nexo,
           precio20: cliente.precio20,
           precio10: cliente.precio10,
         }
@@ -125,7 +121,6 @@ export function ClientFormModal({
               lat: cliente.lat,
               lng: cliente.lng,
               diasEntrega: cliente.diasEntrega,
-              nexo: cliente.nexo,
               precio20: cliente.precio20,
               precio10: cliente.precio10,
             }
@@ -352,11 +347,6 @@ export function ClientFormModal({
               value={form.diasEntrega}
               onChange={(v) => setForm({ ...form, diasEntrega: v })}
             />
-          </div>
-
-          <div>
-            <Label>Nexo</Label>
-            <NexoSelector value={form.nexo} onChange={(v) => setForm({ ...form, nexo: v })} />
           </div>
 
           <div>

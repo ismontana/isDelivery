@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { NexoDot } from "@/components/shared/NexoSelector";
+import { ActividadPill } from "@/components/shared/ActividadBadge";
+import { diasDesdeUltimaActividad } from "@/lib/actividad";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/store/useStore";
@@ -16,6 +17,8 @@ export function ClientsTable({
   onRowClick: (c: Cliente) => void;
 }) {
   const updateCliente = useStore((s) => s.updateCliente);
+  const ventas = useStore((s) => s.ventas);
+  const pedidos = useStore((s) => s.pedidos);
 
   const columns: DataTableColumn<Cliente>[] = [
     {
@@ -53,9 +56,10 @@ export function ClientsTable({
       ),
     },
     {
-      key: "nexo",
-      header: "Nexo",
-      render: (c) => <NexoDot value={c.nexo} />,
+      key: "actividad",
+      header: "Actividad",
+      sortValue: (c) => diasDesdeUltimaActividad(c.id, ventas, pedidos) ?? 999999,
+      render: (c) => <ActividadPill dias={diasDesdeUltimaActividad(c.id, ventas, pedidos)} />,
     },
     {
       key: "precio20",

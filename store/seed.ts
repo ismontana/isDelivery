@@ -1,6 +1,7 @@
 import { v4 as uuid } from "uuid";
 import type {
   Cliente,
+  Configuracion,
   EnvaseDefault,
   Gasto,
   Llenado,
@@ -49,6 +50,19 @@ export function seedEnvaseDefault(): EnvaseDefault {
   return { precio20: 80, precio10: 60 };
 }
 
+export function seedConfiguracion(): Configuracion {
+  return {
+    prestamoHabilitado: true,
+    envasePrestadoConCosto: false,
+    precioPrestamoEnvase20: 80,
+    precioPrestamoEnvase10: 60,
+    comisionRetrasoHabilitada: false,
+    comisionRetrasoMonto: 10,
+    comisionRetrasoFrecuencia: "semanal",
+    comisionRetrasoDiasGracia: 7,
+  };
+}
+
 export function seedPurificadoras(): Purificadora[] {
   return [
     {
@@ -76,7 +90,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: hua.nombre,
       tipoCliente: "cliente",
       tipoVenta: "mayor",
-      nexo: "verde",
       lat: 19.3167,
       lng: -97.9167,
       precio20: hua.precioVenta20,
@@ -91,7 +104,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: hua.nombre,
       tipoCliente: "cliente",
       tipoVenta: "menor",
-      nexo: "amarillo",
       lat: 19.312,
       lng: -97.921,
       precio20: hua.precioVenta20,
@@ -106,7 +118,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: hua.nombre,
       tipoCliente: "cliente",
       tipoVenta: "mayor",
-      nexo: "rojo",
       lat: 19.32,
       lng: -97.913,
       precio20: hua.precioVenta20,
@@ -121,7 +132,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: ixt.nombre,
       tipoCliente: "cliente",
       tipoVenta: "menor",
-      nexo: "verde",
       lat: 19.335,
       lng: -97.868,
       precio20: ixt.precioVenta20,
@@ -136,7 +146,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: ixt.nombre,
       tipoCliente: "prospecto",
       tipoVenta: "menor",
-      nexo: "amarillo",
       lat: 19.331,
       lng: -97.871,
       precio20: ixt.precioVenta20,
@@ -151,7 +160,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: zac.nombre,
       tipoCliente: "cliente",
       tipoVenta: "menor",
-      nexo: "verde",
       lat: 19.281,
       lng: -98.181,
       precio20: zac.precioVenta20,
@@ -166,7 +174,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: zac.nombre,
       tipoCliente: "prospecto",
       tipoVenta: "mayor",
-      nexo: "verde",
       lat: 19.285,
       lng: -98.176,
       precio20: zac.precioVenta20,
@@ -181,7 +188,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
       municipio: hua.nombre,
       tipoCliente: "cliente",
       tipoVenta: "menor",
-      nexo: "amarillo",
       lat: 19.309,
       lng: -97.928,
       precio20: hua.precioVenta20,
@@ -210,7 +216,6 @@ export function seedClientes(municipios: Municipio[]): Cliente[] {
     tipoCliente: c.tipoCliente ?? "cliente",
     tipoVenta: c.tipoVenta ?? "menor",
     diasEntrega: c.diasEntrega ?? [],
-    nexo: c.nexo ?? "verde",
     precio20: c.precio20 ?? 20,
     precio10: c.precio10 ?? 12,
     createdAt: daysAgoISO(30),
@@ -328,6 +333,10 @@ export function seedPrestamos(clientes: Cliente[]): Prestamo[] {
       montoLiquidoPendiente: 2 * c.precio20,
       envase20Pendiente: 2,
       envase10Pendiente: 0,
+      envaseConCosto: false,
+      precioDepositoEnvase20: 0,
+      precioDepositoEnvase10: 0,
+      montoDepositoPendiente: 0,
     },
   ];
 }

@@ -6,7 +6,9 @@ import { BottomSheet } from "@/components/shared/BottomSheet";
 import { GlassButton } from "@/components/shared/GlassButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { NexoDot } from "@/components/shared/NexoSelector";
+import { ActividadBadge } from "@/components/shared/ActividadBadge";
+import { useStore } from "@/store/useStore";
+import { diasDesdeUltimaActividad } from "@/lib/actividad";
 import { formatMoney } from "@/lib/format";
 import type { Cliente } from "@/types";
 import { OrderModal } from "./OrderModal";
@@ -27,6 +29,9 @@ export function ClientDetailSheet({
   const [modal, setModal] = React.useState<
     "pedido" | "venta" | "prestamo" | "editar" | "historial" | null
   >(null);
+  const ventas = useStore((s) => s.ventas);
+  const pedidos = useStore((s) => s.pedidos);
+  const prestamoHabilitado = useStore((s) => s.configuracion.prestamoHabilitado);
 
   if (!cliente) {
     return (
@@ -54,8 +59,11 @@ export function ClientDetailSheet({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-semibold text-ink">{cliente.nombre}</h2>
-              <NexoDot value={cliente.nexo} />
             </div>
+            <ActividadBadge
+              dias={diasDesdeUltimaActividad(cliente.id, ventas, pedidos)}
+              className="mt-0.5"
+            />
             <p className="text-[13px] text-ink-muted">
               {cliente.colonia ? `${cliente.colonia}, ` : ""}
               {cliente.municipio}
@@ -96,17 +104,21 @@ export function ClientDetailSheet({
         )}
 
         <div className="mt-4 flex justify-between gap-1.5">
-          {actions.map((a) => (
-            <GlassButton
-              key={a.key}
-              size="icon"
-              tooltip={a.label}
-              onClick={() => setModal(a.key)}
-              className="flex-1"
-            >
-              <a.icon className="h-[18px] w-[18px]" />
-            </GlassButton>
-          ))}
+          {actions.map((a) => {
+            const disabled = a.key === "prestamo" && !prestamoHabilitado;
+            return (
+              <GlassButton
+                key={a.key}
+                size="icon"
+                tooltip={disabled ? "Préstamos desactivados en Ajustes" : a.label}
+                onClick={() => !disabled && setModal(a.key)}
+                disabled={disabled}
+                className="flex-1"
+              >
+                <a.icon className="h-[18px] w-[18px]" />
+              </GlassButton>
+            );
+          })}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">

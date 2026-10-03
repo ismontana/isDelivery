@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { useStore } from "@/store/useStore";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function useHydrateStore() {
   const setHydrated = useStore((s) => s.setHydrated);
+  const setAuthHydrated = useAuthStore((s) => s.setHydrated);
   useEffect(() => {
     useStore.persist.rehydrate();
+    useAuthStore.persist.rehydrate();
     setHydrated();
+    setAuthHydrated();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

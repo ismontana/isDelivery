@@ -16,6 +16,7 @@ import { Plus, LocateFixed, X, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import type { Cliente } from "@/types";
 import { PinMarker, pinMarkerHTML } from "@/components/shared/PinMarker";
+import { diasDesdeUltimaActividad } from "@/lib/actividad";
 import { GlassButton } from "@/components/shared/GlassButton";
 import { ClientDetailSheet } from "@/features/clients/ClientDetailSheet";
 import { MapFilters, type MapFilterState } from "./MapFilters";
@@ -24,9 +25,9 @@ import { toast } from "sonner";
 
 const DEFAULT_CENTER: [number, number] = [19.3167, -97.9167]; // Huamantla, Tlaxcala
 
-function pinIcon(cliente: Cliente) {
+function pinIcon(cliente: Cliente, dias: number | null) {
   return L.divIcon({
-    html: pinMarkerHTML(cliente.tipoCliente, cliente.nexo),
+    html: pinMarkerHTML(cliente.tipoCliente, dias),
     className: "",
     iconSize: [34, 42],
     iconAnchor: [17, 42],
@@ -37,7 +38,7 @@ function placingIcon() {
   return L.divIcon({
     html: ReactDOMServer.renderToStaticMarkup(
       <div style={{ filter: "drop-shadow(0 4px 8px rgba(10,42,67,0.35))" }}>
-        <PinMarker tipoCliente="cliente" nexo="verde" size={38} />
+        <PinMarker tipoCliente="cliente" dias={null} size={38} />
       </div>
     ),
     className: "",
@@ -126,6 +127,8 @@ function UserLocationLayer({ active }: { active: boolean }) {
 
 export function MapView() {
   const clientes = useStore((s) => s.clientes);
+  const ventas = useStore((s) => s.ventas);
+  const pedidos = useStore((s) => s.pedidos);
   const [filters, setFilters] = React.useState<MapFilterState>({
     municipio: "todos",
     tipo: "todos",
@@ -196,7 +199,7 @@ export function MapView() {
           <Marker
             key={c.id}
             position={[c.lat, c.lng]}
-            icon={pinIcon(c)}
+            icon={pinIcon(c, diasDesdeUltimaActividad(c.id, ventas, pedidos))}
             eventHandlers={{ click: () => setSelectedId(c.id) }}
           />
         ))}

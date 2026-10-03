@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { v4 as uuid } from "uuid";
 import type {
   Cliente,
+  Configuracion,
   DeudaRow,
   EnvaseDefault,
   Gasto,
@@ -21,6 +22,7 @@ import type {
 } from "@/types";
 import {
   seedClientes,
+  seedConfiguracion,
   seedEnvaseDefault,
   seedGastos,
   seedLlenados,
@@ -77,6 +79,7 @@ interface AppState {
   stock: Stock;
   movimientos: StockMovimiento[];
   envaseDefault: EnvaseDefault;
+  configuracion: Configuracion;
 
   setHydrated: () => void;
   toggleTheme: () => void;
@@ -107,6 +110,11 @@ interface AppState {
     cantidad: number
   ) => void;
   liquidarPrestamoEnvase: (prestamoId: string, tamano: "20L" | "10L") => void;
+  abonarPrestamoDeposito: (prestamoId: string, monto: number) => void;
+  liquidarPrestamoDeposito: (prestamoId: string) => void;
+
+  // Cobranza
+  aplicarComisionAtraso: (ventaId: string, monto: number) => void;
 
   // Purificadoras
   addPurificadora: (p: Omit<Purificadora, "id">) => void;
@@ -126,6 +134,7 @@ interface AppState {
 
   // Ajustes globales
   updateEnvaseDefault: (patch: Partial<EnvaseDefault>) => void;
+  updateConfiguracion: (patch: Partial<Configuracion>) => void;
 
   // Stock
   registrarCompraStock: (
@@ -200,6 +209,7 @@ function buildInitialSeed() {
   const stock = seedStock();
   const movimientos = seedStockMovimientos();
   const envaseDefault = seedEnvaseDefault();
+  const configuracion = seedConfiguracion();
 
   // Apply deuda from seeded fiado ventas + prestamos onto clientes
   const clientesConDeuda = clientes.map((c) => {
@@ -209,7 +219,7 @@ function buildInitialSeed() {
       .forEach((v) => (deuda += v.montoPendiente));
     prestamos
       .filter((p) => p.clienteId === c.id)
-      .forEach((p) => (deuda += p.montoLiquidoPendiente));
+      .forEach((p) => (deuda += p.montoLiquidoPendiente + p.montoDepositoPendiente));
     return { ...c, deuda };
   });
 
@@ -225,6 +235,7 @@ function buildInitialSeed() {
     stock,
     movimientos,
     envaseDefault,
+    configuracion,
   };
 }
 
@@ -367,11 +378,21 @@ export const useStore = create<AppState>()(
       },
 
       addPrestamo: (p) => {
+        const config = get().configuracion;
+        if (!config.prestamoHabilitado) return;
+
         const totalContenedores20 = p.envase20 + p.liquido20;
         const totalContenedores10 = p.envase10 + p.liquido10;
         const montoLiquidoPendiente = p.aguaPagada
           ? 0
           : p.liquido20 * p.precioLiquido20 + p.liquido10 * p.precioLiquido10;
+
+        const envaseConCosto = config.envasePrestadoConCosto;
+        const precioDepositoEnvase20 = config.precioPrestamoEnvase20;
+        const precioDepositoEnvase10 = config.precioPrestamoEnvase10;
+        const montoDepositoPendiente = envaseConCosto
+          ? totalContenedores20 * precioDepositoEnvase20 + totalContenedores10 * precioDepositoEnvase10
+          : 0;
 
         const prestamo: Prestamo = {
           id: uuid(),
@@ -387,6 +408,10 @@ export const useStore = create<AppState>()(
           montoLiquidoPendiente,
           envase20Pendiente: totalContenedores20,
           envase10Pendiente: totalContenedores10,
+          envaseConCosto,
+          precioDepositoEnvase20,
+          precioDepositoEnvase10,
+          montoDepositoPendiente,
         };
 
         set((s) => {
@@ -418,7 +443,7 @@ export const useStore = create<AppState>()(
             movimientos,
             clientes: s.clientes.map((c) =>
               c.id === p.clienteId
-                ? { ...c, deuda: c.deuda + montoLiquidoPendiente }
+                ? { ...c, deuda: c.deuda + montoLiquidoPendiente + montoDepositoPendiente }
                 : c
             ),
           };
@@ -482,6 +507,47 @@ export const useStore = create<AppState>()(
         get().abonarPrestamoEnvase(prestamoId, tamano, pendiente);
       },
 
+      abonarPrestamoDeposito: (prestamoId, monto) =>
+        set((s) => {
+          const prestamo = s.prestamos.find((p) => p.id === prestamoId);
+          if (!prestamo || monto <= 0) return s;
+          const abono = Math.min(monto, prestamo.montoDepositoPendiente);
+          return {
+            prestamos: s.prestamos.map((p) =>
+              p.id === prestamoId
+                ? { ...p, montoDepositoPendiente: p.montoDepositoPendiente - abono }
+                : p
+            ),
+            clientes: s.clientes.map((c) =>
+              c.id === prestamo.clienteId
+                ? { ...c, deuda: Math.max(0, c.deuda - abono) }
+                : c
+            ),
+          };
+        }),
+
+      liquidarPrestamoDeposito: (prestamoId) => {
+        const prestamo = get().prestamos.find((p) => p.id === prestamoId);
+        if (!prestamo) return;
+        get().abonarPrestamoDeposito(prestamoId, prestamo.montoDepositoPendiente);
+      },
+
+      aplicarComisionAtraso: (ventaId, monto) =>
+        set((s) => {
+          const venta = s.ventas.find((v) => v.id === ventaId);
+          if (!venta || monto <= 0) return s;
+          return {
+            ventas: s.ventas.map((v) =>
+              v.id === ventaId
+                ? { ...v, total: v.total + monto, montoPendiente: v.montoPendiente + monto }
+                : v
+            ),
+            clientes: s.clientes.map((c) =>
+              c.id === venta.clienteId ? { ...c, deuda: c.deuda + monto } : c
+            ),
+          };
+        }),
+
       addPurificadora: (p) =>
         set((s) => ({ purificadoras: [{ ...p, id: uuid() }, ...s.purificadoras] })),
       updatePurificadora: (id, patch) =>
@@ -521,6 +587,9 @@ export const useStore = create<AppState>()(
 
       updateEnvaseDefault: (patch) =>
         set((s) => ({ envaseDefault: { ...s.envaseDefault, ...patch } })),
+
+      updateConfiguracion: (patch) =>
+        set((s) => ({ configuracion: { ...s.configuracion, ...patch } })),
 
       registrarCompraStock: (tamano, cantidad, nota) =>
         set((s) => {
@@ -566,6 +635,7 @@ export const useStore = create<AppState>()(
           stock: s.stock,
           movimientos: s.movimientos,
           envaseDefault: s.envaseDefault,
+          configuracion: s.configuracion,
           theme: s.theme,
         };
         return JSON.stringify(payload, null, 2);
@@ -587,6 +657,7 @@ export const useStore = create<AppState>()(
             stock: data.stock ?? s.stock,
             movimientos: data.movimientos ?? s.movimientos,
             envaseDefault: data.envaseDefault ?? s.envaseDefault,
+            configuracion: data.configuracion ?? s.configuracion,
             theme: data.theme ?? s.theme,
           }));
           return true;
@@ -661,6 +732,25 @@ export const useStore = create<AppState>()(
               cantidad: p.envase10Pendiente,
               fecha: p.fecha,
               montoAdeudado: 0,
+            });
+          }
+          if (p.montoDepositoPendiente > 0) {
+            rows.push({
+              id: `prestamo-deposito-${p.id}`,
+              origenId: p.id,
+              origenTipo: "prestamo",
+              clienteId: p.clienteId,
+              clienteNombre: cliente?.nombre ?? "Cliente eliminado",
+              tipo: "deposito_envase",
+              tamano:
+                p.envase20 + p.liquido20 > 0 && p.envase10 + p.liquido10 > 0
+                  ? "mixto"
+                  : p.envase20 + p.liquido20 > 0
+                    ? "20L"
+                    : "10L",
+              cantidad: p.envase20Pendiente + p.envase10Pendiente,
+              fecha: p.fecha,
+              montoAdeudado: p.montoDepositoPendiente,
             });
           }
         });

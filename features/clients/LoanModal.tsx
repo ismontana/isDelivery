@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useStore, type NuevoPrestamoInput } from "@/store/useStore";
-import { todayISO } from "@/lib/format";
+import { formatMoney, todayISO } from "@/lib/format";
 
 interface LoanModalProps {
   open: boolean;
@@ -19,6 +19,7 @@ interface LoanModalProps {
 
 export function LoanModal({ open, onOpenChange, clienteId, onSaved }: LoanModalProps) {
   const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteId));
+  const configuracion = useStore((s) => s.configuracion);
   const addPrestamo = useStore((s) => s.addPrestamo);
 
   const [envase20, setEnvase20] = React.useState(0);
@@ -67,18 +68,44 @@ export function LoanModal({ open, onOpenChange, clienteId, onSaved }: LoanModalP
 
   const montoLiquido = aguaPagada ? 0 : liquido20 * precioLiquido20 + liquido10 * precioLiquido10;
   const totalEnvasesPendientes = envase20 + envase10 + liquido20 + liquido10;
+  const montoDeposito = configuracion.envasePrestadoConCosto
+    ? (envase20 + liquido20) * configuracion.precioPrestamoEnvase20 +
+      (envase10 + liquido10) * configuracion.precioPrestamoEnvase10
+    : 0;
+
+  if (!configuracion.prestamoHabilitado) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent title="Préstamos desactivados" open={open} className="max-w-sm">
+          <p className="text-sm text-ink-muted">
+            La opción de préstamos está desactivada para este negocio. Actívala en{" "}
+            <span className="font-medium text-ink">Ajustes → Préstamos y cobranza</span> si
+            quieres volver a prestar envases o garrafones.
+          </p>
+          <div className="mt-4 flex justify-end">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Entendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title="Registrar préstamo" open={open} className="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <p className="text-[13px] text-ink-muted">
-            El envase prestado nunca se cobra. Si el agua no está pagada, quedará pendiente
-            cobrarla junto con recoger el envase.
+            {configuracion.envasePrestadoConCosto
+              ? "El envase prestado lleva un depósito configurado en Ajustes. Si el agua no está pagada, también quedará pendiente cobrarla."
+              : "El envase prestado no tiene costo en este negocio. Si el agua no está pagada, quedará pendiente cobrarla junto con recoger el envase."}
           </p>
 
           <div className="space-y-2">
-            <Label>Envases prestados (no se cobran)</Label>
+            <Label>
+              Envases prestados{configuracion.envasePrestadoConCosto ? " (con depósito)" : " (sin costo)"}
+            </Label>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-[11px]">20L</Label>
@@ -171,9 +198,17 @@ export function LoanModal({ open, onOpenChange, clienteId, onSaved }: LoanModalP
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink-muted">Monto de agua pendiente</span>
               <span className="font-semibold text-ink">
-                {montoLiquido > 0 ? `$${montoLiquido.toLocaleString("es-MX")}` : "—"}
+                {montoLiquido > 0 ? formatMoney(montoLiquido) : "—"}
               </span>
             </div>
+            {configuracion.envasePrestadoConCosto && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-muted">Depósito por envase</span>
+                <span className="font-semibold text-ink">
+                  {montoDeposito > 0 ? formatMoney(montoDeposito) : "—"}
+                </span>
+              </div>
+            )}
           </div>
 
           {error && <p className="text-sm text-danger">{error}</p>}
